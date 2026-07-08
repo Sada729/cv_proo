@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutTxIdRouteImport } from './routes/checkout.$txId'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as ApiPublicCinetpayWebhookRouteImport } from './routes/api/public/cinetpay-webhook'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -29,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutTxIdRoute = CheckoutTxIdRouteImport.update({
+  id: '/checkout/$txId',
+  path: '/checkout/$txId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -39,18 +46,28 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCinetpayWebhookRoute =
+  ApiPublicCinetpayWebhookRouteImport.update({
+    id: '/api/public/cinetpay-webhook',
+    path: '/api/public/cinetpay-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/pricing': typeof AuthenticatedPricingRoute
+  '/checkout/$txId': typeof CheckoutTxIdRoute
+  '/api/public/cinetpay-webhook': typeof ApiPublicCinetpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/pricing': typeof AuthenticatedPricingRoute
+  '/checkout/$txId': typeof CheckoutTxIdRoute
+  '/api/public/cinetpay-webhook': typeof ApiPublicCinetpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +76,26 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
+  '/checkout/$txId': typeof CheckoutTxIdRoute
+  '/api/public/cinetpay-webhook': typeof ApiPublicCinetpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/pricing'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/pricing'
+    | '/checkout/$txId'
+    | '/api/public/cinetpay-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/pricing'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/pricing'
+    | '/checkout/$txId'
+    | '/api/public/cinetpay-webhook'
   id:
     | '__root__'
     | '/'
@@ -72,12 +103,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/pricing'
+    | '/checkout/$txId'
+    | '/api/public/cinetpay-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CheckoutTxIdRoute: typeof CheckoutTxIdRoute
+  ApiPublicCinetpayWebhookRoute: typeof ApiPublicCinetpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -103,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/$txId': {
+      id: '/checkout/$txId'
+      path: '/checkout/$txId'
+      fullPath: '/checkout/$txId'
+      preLoaderRoute: typeof CheckoutTxIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/pricing': {
       id: '/_authenticated/pricing'
       path: '/pricing'
@@ -116,6 +158,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/cinetpay-webhook': {
+      id: '/api/public/cinetpay-webhook'
+      path: '/api/public/cinetpay-webhook'
+      fullPath: '/api/public/cinetpay-webhook'
+      preLoaderRoute: typeof ApiPublicCinetpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -137,6 +186,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CheckoutTxIdRoute: CheckoutTxIdRoute,
+  ApiPublicCinetpayWebhookRoute: ApiPublicCinetpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
