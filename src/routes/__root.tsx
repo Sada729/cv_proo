@@ -83,9 +83,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Créez un CV moderne, optimisé ATS, en quelques minutes. Templates premium, IA personnalisée, adaptation à chaque offre d'emploi." },
       { name: "author", content: "ResumAI" },
       { property: "og:title", content: "ResumAI — Créateur de CV ATS avec IA" },
-      { property: "og:description", content: "Templates modernes, IA de personnalisation, conformité ATS garantie." },
+      { property: "og:description", content: "Créez un CV moderne, optimisé ATS, en quelques minutes. Templates premium, IA personnalisée, adaptation à chaque offre d'emploi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "ResumAI — Créateur de CV ATS avec IA" },
+      { name: "twitter:description", content: "Créez un CV moderne, optimisé ATS, en quelques minutes. Templates premium, IA personnalisée, adaptation à chaque offre d'emploi." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3a1a74d3-8176-4137-812c-a3bdeadfc304/id-preview-c8c85ba7--8fed15b7-ef69-41e4-9a6c-c11d3cad326b.lovable.app-1783543862005.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3a1a74d3-8176-4137-812c-a3bdeadfc304/id-preview-c8c85ba7--8fed15b7-ef69-41e4-9a6c-c11d3cad326b.lovable.app-1783543862005.png" },
     ],
     links: [
       {
