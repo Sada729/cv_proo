@@ -16,6 +16,7 @@ import { Route as CheckoutTxIdRouteImport } from './routes/checkout.$txId'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApiPublicCinetpayWebhookRouteImport } from './routes/api/public/cinetpay-webhook'
+import { Route as AuthenticatedEditorCvIdRouteImport } from './routes/_authenticated/editor.$cvId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -52,6 +53,11 @@ const ApiPublicCinetpayWebhookRoute =
     path: '/api/public/cinetpay-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedEditorCvIdRoute = AuthenticatedEditorCvIdRouteImport.update({
+  id: '/editor/$cvId',
+  path: '/editor/$cvId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/checkout/$txId': typeof CheckoutTxIdRoute
+  '/editor/$cvId': typeof AuthenticatedEditorCvIdRoute
   '/api/public/cinetpay-webhook': typeof ApiPublicCinetpayWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/checkout/$txId': typeof CheckoutTxIdRoute
+  '/editor/$cvId': typeof AuthenticatedEditorCvIdRoute
   '/api/public/cinetpay-webhook': typeof ApiPublicCinetpayWebhookRoute
 }
 export interface FileRoutesById {
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/checkout/$txId': typeof CheckoutTxIdRoute
+  '/_authenticated/editor/$cvId': typeof AuthenticatedEditorCvIdRoute
   '/api/public/cinetpay-webhook': typeof ApiPublicCinetpayWebhookRoute
 }
 export interface FileRouteTypes {
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/pricing'
     | '/checkout/$txId'
+    | '/editor/$cvId'
     | '/api/public/cinetpay-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/pricing'
     | '/checkout/$txId'
+    | '/editor/$cvId'
     | '/api/public/cinetpay-webhook'
   id:
     | '__root__'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/pricing'
     | '/checkout/$txId'
+    | '/_authenticated/editor/$cvId'
     | '/api/public/cinetpay-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -166,17 +178,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCinetpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/editor/$cvId': {
+      id: '/_authenticated/editor/$cvId'
+      path: '/editor/$cvId'
+      fullPath: '/editor/$cvId'
+      preLoaderRoute: typeof AuthenticatedEditorCvIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
+  AuthenticatedEditorCvIdRoute: typeof AuthenticatedEditorCvIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
+  AuthenticatedEditorCvIdRoute: AuthenticatedEditorCvIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion, type Variants } from "motion/react";
+import { Link } from "@tanstack/react-router";
+import { motion, type Variants, useScroll, useTransform, useMotionValue, useSpring } from "motion/react";
 import {
   Sparkles, FileText, Upload, Wand2, Check, ArrowRight, Star,
   ShieldCheck, Zap, Target, Palette, Bot, ChevronDown,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import heroPerson from "@/assets/hero-person.jpg";
 import tpl1 from "@/assets/template-1.jpg";
 import tpl2 from "@/assets/template-2.jpg";
@@ -33,24 +34,24 @@ function Header() {
       className="fixed top-4 left-1/2 z-50 w-[min(1200px,calc(100%-2rem))] -translate-x-1/2"
     >
       <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 px-5 py-3 shadow-card backdrop-blur-xl">
-        <a href="#" className="flex items-center gap-2 font-bold text-lg">
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
           <span className="grid h-8 w-8 place-items-center rounded-xl gradient-primary text-white">
             <Sparkles className="h-4 w-4" />
           </span>
           <span>ResumAI</span>
-        </a>
+        </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
           {["Fonctionnalités", "Templates", "Tarifs", "FAQ"].map((l) => (
             <a key={l} href={`#${l.toLowerCase()}`} className="hover:text-foreground transition-colors">{l}</a>
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <button className="hidden sm:inline-flex text-sm font-medium px-4 py-2 rounded-xl hover:bg-muted transition-colors">
+          <Link to="/auth" className="hidden sm:inline-flex text-sm font-medium px-4 py-2 rounded-xl hover:bg-muted transition-colors">
             Connexion
-          </button>
-          <button className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl gradient-primary text-white shadow-elegant hover:opacity-90 transition-opacity">
+          </Link>
+          <Link to="/auth" className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl gradient-primary text-white shadow-elegant hover:opacity-90 transition-opacity">
             Commencer <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </Link>
         </div>
       </div>
     </motion.header>
@@ -79,12 +80,12 @@ function Hero() {
                 Créez un CV moderne, 100% compatible ATS, adapté à chaque offre en un clic. Templates premium, conseils intelligents, résultats professionnels.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} initial="hidden" animate="show" className="mt-8 flex flex-wrap gap-3">
-                <button className="inline-flex items-center gap-2 rounded-2xl bg-white text-primary font-semibold px-6 py-3.5 shadow-lg hover:scale-[1.02] transition-transform">
+                <Link to="/auth" className="inline-flex items-center gap-2 rounded-2xl bg-white text-primary font-semibold px-6 py-3.5 shadow-lg hover:scale-[1.02] transition-transform">
                   Créer mon CV gratuit <ArrowRight className="h-4 w-4" />
-                </button>
-                <button className="inline-flex items-center gap-2 rounded-2xl border border-white/40 bg-white/10 backdrop-blur text-white font-semibold px-6 py-3.5 hover:bg-white/20 transition-colors">
+                </Link>
+                <Link to="/auth" className="inline-flex items-center gap-2 rounded-2xl border border-white/40 bg-white/10 backdrop-blur text-white font-semibold px-6 py-3.5 hover:bg-white/20 transition-colors">
                   <Upload className="h-4 w-4" /> Importer mon CV
-                </button>
+                </Link>
               </motion.div>
               <motion.div variants={fadeUp} custom={4} initial="hidden" animate="show" className="mt-10 flex items-center gap-4">
                 <div className="flex -space-x-2">
@@ -273,17 +274,17 @@ function Process() {
 
 function Pricing() {
   const plans = [
-    { name: "Gratuit", price: "0€", per: "à vie", features: ["2 templates de base", "Export PDF standard", "Vérification ATS basique"], cta: "Commencer", featured: false },
-    { name: "Pro", price: "9€", per: "/ mois", features: ["Tous les templates", "IA adaptation offre", "Export PDF HD", "Conseils IA illimités", "Import de CV"], cta: "Essayer Pro", featured: true },
-    { name: "Premium", price: "19€", per: "/ mois", features: ["Tout du Pro", "Coach carrière IA", "Lettre de motivation IA", "Support prioritaire", "Multi-langues"], cta: "Passer Premium", featured: false },
+    { name: "Starter", price: "1 000", per: "FCFA", features: ["1 CV téléchargeable", "Tous les templates ATS", "Export PDF haute qualité"], cta: "Choisir Starter", featured: false },
+    { name: "Pro", price: "2 000", per: "FCFA", features: ["5 CV téléchargeables", "Adaptation IA à l'offre", "Import ancien CV", "Support prioritaire"], cta: "Choisir Pro", featured: true },
+    { name: "Premium", price: "5 000", per: "FCFA", features: ["CV illimités", "Lettre de motivation IA", "Coach carrière IA", "Multi-langues"], cta: "Choisir Premium", featured: false },
   ];
   return (
     <section id="tarifs" className="py-24 px-4">
       <div className="mx-auto max-w-[1200px]">
         <div className="text-center max-w-xl mx-auto">
           <div className="text-xs uppercase tracking-widest text-primary font-semibold">Tarifs transparents</div>
-          <h2 className="mt-3 text-4xl md:text-5xl font-bold">Choisissez votre plan.</h2>
-          <p className="mt-4 text-muted-foreground">Sans engagement. Annulez quand vous voulez.</p>
+          <h2 className="mt-3 text-4xl md:text-5xl font-bold">Payez uniquement à la création.</h2>
+          <p className="mt-4 text-muted-foreground">Wave · Orange Money · MTN · Moov · Carte bancaire. Sans abonnement.</p>
         </div>
         <div className="mt-14 grid md:grid-cols-3 gap-5">
           {plans.map((p, i) => (
@@ -303,7 +304,7 @@ function Pricing() {
               <div className="font-bold text-lg">{p.name}</div>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-5xl font-black">{p.price}</span>
-                <span className={p.featured ? "text-white/70" : "text-muted-foreground"}>{p.per}</span>
+                <span className={`text-lg font-semibold ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.per}</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm">
                 {p.features.map(f => (
@@ -313,9 +314,9 @@ function Pricing() {
                   </li>
                 ))}
               </ul>
-              <button className={`mt-8 w-full rounded-xl py-3 font-semibold transition-transform hover:scale-[1.02] ${p.featured ? "bg-white text-primary" : "gradient-primary text-white"}`}>
+              <Link to="/auth" className={`mt-8 w-full text-center block rounded-xl py-3 font-semibold transition-transform hover:scale-[1.02] ${p.featured ? "bg-white text-primary" : "gradient-primary text-white"}`}>
                 {p.cta}
-              </button>
+              </Link>
             </motion.div>
           ))}
         </div>
@@ -385,9 +386,9 @@ function CTA() {
           <Wand2 className="h-10 w-10 text-white mx-auto" />
           <h2 className="mt-4 text-4xl md:text-6xl font-bold text-white">Prêt à décrocher le job ?</h2>
           <p className="mt-4 text-white/85 max-w-xl mx-auto">Rejoignez des milliers de candidats qui ont transformé leur CV avec ResumAI.</p>
-          <button className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white text-primary font-semibold px-8 py-4 shadow-lg hover:scale-[1.03] transition-transform">
+          <Link to="/auth" className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white text-primary font-semibold px-8 py-4 shadow-lg hover:scale-[1.03] transition-transform">
             Créer mon CV maintenant <ArrowRight className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
       </motion.div>
     </section>
