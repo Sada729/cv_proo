@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 import {
   Sparkles, FileText, Upload, Wand2, Check, ArrowRight, Star,
   ShieldCheck, Zap, Target, Palette, Bot, ChevronDown,
@@ -15,10 +15,14 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] as const } }),
-} as const;
+  show: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, delay: i * 0.08, ease: "easeOut" },
+  }),
+};
 
 function Header() {
   return (
