@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { motion, type Variants, useScroll, useTransform, useMotionValue, useSpring } from "motion/react";
+import { motion, type Variants, useMotionValue, useSpring } from "motion/react";
 import {
-  Sparkles, FileText, Upload, Wand2, Check, ArrowRight, Star,
-  ShieldCheck, Zap, Target, Palette, Bot, ChevronDown,
+  Sparkles, Upload, Wand2, Check, ArrowRight,
+  ShieldCheck, Target, Bot, ChevronDown, Quote,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import heroPerson from "@/assets/hero-person.jpg";
@@ -59,11 +59,31 @@ function Header() {
 }
 
 function Hero() {
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 60, damping: 20 });
+  const sy = useSpring(my, { stiffness: 60, damping: 20 });
+
   return (
-    <section className="relative pt-32 pb-20 px-4">
+    <section className="relative pt-32 pb-20 px-4"
+      onMouseMove={(e) => {
+        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        mx.set(e.clientX - r.left);
+        my.set(e.clientY - r.top);
+      }}
+    >
       <div className="mx-auto max-w-[1200px]">
         <div className="relative overflow-hidden rounded-[2.5rem] shadow-elegant">
           <div className="absolute inset-0 gradient-hero" />
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-60 mix-blend-overlay"
+            style={{
+              background: "radial-gradient(500px circle at var(--mx) var(--my), rgba(255,255,255,0.35), transparent 60%)",
+              "--mx": sx as unknown as string,
+              "--my": sy as unknown as string,
+            } as React.CSSProperties}
+          />
           <div className="absolute -top-32 -right-20 h-96 w-96 rounded-full bg-white/20 blur-3xl animate-blob" />
           <div className="absolute -bottom-24 -left-10 h-80 w-80 rounded-full bg-primary-foreground/10 blur-3xl animate-blob" style={{ animationDelay: "3s" }} />
 
