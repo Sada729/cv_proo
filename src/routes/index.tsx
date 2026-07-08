@@ -452,12 +452,77 @@ function Index() {
       <Header />
       <Hero />
       <Features />
+      <LogoMarquee />
       <Templates />
       <Process />
+      <Testimonials />
       <Pricing />
       <FAQ />
       <CTA />
       <Footer />
     </main>
+  );
+}
+
+function LogoMarquee() {
+  const logos = ["Orange", "Sonatel", "Wave", "BNP Paribas", "Ecobank", "MTN", "Free", "Vinci", "Deloitte", "PwC"];
+  return (
+    <section className="py-14 border-y border-border/60 bg-card/40 overflow-hidden">
+      <div className="mx-auto max-w-[1200px] px-4 text-center text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+        Nos candidats ont été recrutés chez
+      </div>
+      <div className="mt-6 flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_15%,#000_85%,transparent)]">
+        <motion.div
+          className="flex gap-14 shrink-0 pr-14 whitespace-nowrap"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+        >
+          {[...logos, ...logos, ...logos, ...logos].map((l, i) => (
+            <span key={i} className="text-2xl font-black text-foreground/50 hover:text-primary transition-colors">
+              {l}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const items = [
+    { q: "J'ai décroché mon poste chez Orange en 2 semaines grâce à ResumAI.", a: "Awa D.", role: "Product Manager, Dakar" },
+    { q: "L'adaptation IA m'a fait passer de 0 à 8 entretiens en un mois.", a: "Cheikh M.", role: "Dev Full-Stack" },
+    { q: "Templates magnifiques, export impeccable. Le rapport qualité/prix est imbattable.", a: "Marie K.", role: "Cheffe de projet" },
+    { q: "Enfin un outil qui comprend nos réalités africaines et paie en FCFA.", a: "Ibrahim S.", role: "Data Analyst" },
+  ];
+  return (
+    <section className="py-24 px-4 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+      <div className="mx-auto max-w-[1200px]">
+        <div className="text-center max-w-xl mx-auto">
+          <div className="text-xs uppercase tracking-widest text-primary font-semibold">Témoignages</div>
+          <h2 className="mt-3 text-4xl md:text-5xl font-bold">Ils ont décroché le job.</h2>
+        </div>
+        <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {items.map((t, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              whileHover={{ y: -6, rotate: -0.5 }}
+              className="rounded-2xl bg-card border border-border/50 p-6 shadow-card"
+            >
+              <Quote className="h-6 w-6 text-primary/60" />
+              <p className="mt-3 text-sm">{t.q}</p>
+              <div className="mt-5 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full gradient-primary" />
+                <div className="text-xs"><div className="font-bold">{t.a}</div><div className="text-muted-foreground">{t.role}</div></div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
