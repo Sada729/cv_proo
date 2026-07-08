@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { CVData, TemplateId } from "@/lib/cv-types";
 
 export function CVPreview({ data, template }: { data: CVData; template: TemplateId }) {
@@ -139,7 +140,7 @@ function Creative({ data }: { data: CVData }) {
   );
 }
 
-const TemplateMap: Record<TemplateId, (p: { data: CVData }) => JSX.Element> = {
+const TemplateMap: Record<TemplateId, (p: { data: CVData }) => ReactElement> = {
   executive: Executive,
   minimal: Minimal,
   gold: Gold,
