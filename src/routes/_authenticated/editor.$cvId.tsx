@@ -54,7 +54,7 @@ function Editor() {
     if (!jobText.trim() && !file) { toast.error("Collez l'offre ou uploadez un document."); return; }
     setAiBusy("adapt");
     try {
-      const payload: Parameters<typeof adaptFn>[0]["data"] = { currentCV: data };
+      const payload: { currentCV: CVData; jobText?: string; fileBase64?: string; mimeType?: string; fileName?: string } = { currentCV: data };
       if (jobText.trim()) payload.jobText = jobText;
       if (file) {
         payload.fileBase64 = await fileToBase64(file);
