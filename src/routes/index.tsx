@@ -452,7 +452,6 @@ function Index() {
       <Header />
       <Hero />
       <Features />
-      <LogoMarquee />
       <Templates />
       <Process />
       <Testimonials />
@@ -461,30 +460,6 @@ function Index() {
       <CTA />
       <Footer />
     </main>
-  );
-}
-
-function LogoMarquee() {
-  const logos = ["Orange", "Sonatel", "Wave", "BNP Paribas", "Ecobank", "MTN", "Free", "Vinci", "Deloitte", "PwC"];
-  return (
-    <section className="py-14 border-y border-border/60 bg-card/40 overflow-hidden">
-      <div className="mx-auto max-w-[1200px] px-4 text-center text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-        Nos candidats ont été recrutés chez
-      </div>
-      <div className="mt-6 flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_15%,#000_85%,transparent)]">
-        <motion.div
-          className="flex gap-14 shrink-0 pr-14 whitespace-nowrap"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ duration: 30, ease: "linear", repeat: Infinity }}
-        >
-          {[...logos, ...logos, ...logos, ...logos].map((l, i) => (
-            <span key={i} className="text-2xl font-black text-foreground/50 hover:text-primary transition-colors">
-              {l}
-            </span>
-          ))}
-        </motion.div>
-      </div>
-    </section>
   );
 }
 
