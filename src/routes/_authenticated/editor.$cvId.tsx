@@ -7,7 +7,9 @@ import { Save, Download, ArrowLeft, Upload, Plus, Trash2, Lock, Sparkles, Loader
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CVPreview } from "@/components/cv-templates/CVPreview";
-import { emptyCV, TEMPLATES, type CVData, type TemplateId, type CVExperience, type CVEducation } from "@/lib/cv-types";
+import { emptyCV, TEMPLATES, SAMPLE_CV, ACCENT_COLORS, FONT_FAMILIES, type CVData, type TemplateId, type CVExperience, type CVEducation } from "@/lib/cv-types";
+import { useServerFn } from "@tanstack/react-start";
+import { parseUploadedCV, adaptCVToJob } from "@/lib/ai-cv.functions";
 
 export const Route = createFileRoute("/_authenticated/editor/$cvId")({
   component: Editor,
@@ -24,6 +26,48 @@ function Editor() {
   const [title, setTitle] = useState("Mon CV");
   const [data, setData] = useState<CVData>(emptyCV);
   const [initialized, setInitialized] = useState(false);
+  const [jobText, setJobText] = useState("");
+  const [aiBusy, setAiBusy] = useState<null | "import" | "adapt">(null);
+  const parseFn = useServerFn(parseUploadedCV);
+  const adaptFn = useServerFn(adaptCVToJob);
+
+  async function fileToBase64(file: File): Promise<string> {
+    const buf = await file.arrayBuffer();
+    let binary = ""; const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  async function handleImportCV(file: File) {
+    setAiBusy("import");
+    try {
+      const b64 = await fileToBase64(file);
+      const res = await parseFn({ data: { fileBase64: b64, mimeType: file.type || "application/pdf", fileName: file.name } });
+      if (!res.ok || !res.cv) { toast.error(res.error ?? "Impossible d'analyser le CV"); return; }
+      const cv = res.cv as CVData;
+      setData(d => ({ ...d, ...cv, accent: d.accent, fontFamily: d.fontFamily, avatarUrl: d.avatarUrl }));
+      toast.success("CV importé et converti au format ATS !");
+    } finally { setAiBusy(null); }
+  }
+
+  async function handleAdapt(file?: File) {
+    if (!jobText.trim() && !file) { toast.error("Collez l'offre ou uploadez un document."); return; }
+    setAiBusy("adapt");
+    try {
+      const payload: Parameters<typeof adaptFn>[0]["data"] = { currentCV: data };
+      if (jobText.trim()) payload.jobText = jobText;
+      if (file) {
+        payload.fileBase64 = await fileToBase64(file);
+        payload.mimeType = file.type || "application/pdf";
+        payload.fileName = file.name;
+      }
+      const res = await adaptFn({ data: payload });
+      if (!res.ok || !res.cv) { toast.error(res.error ?? "Échec de l'adaptation"); return; }
+      const cv = res.cv as CVData;
+      setData(d => ({ ...d, ...cv, accent: d.accent, fontFamily: d.fontFamily, avatarUrl: d.avatarUrl }));
+      toast.success("CV adapté à l'offre !");
+    } finally { setAiBusy(null); }
+  }
 
   const cvQuery = useQuery({
     queryKey: ["cv", cvId],
@@ -134,14 +178,55 @@ function Editor() {
         <div className="space-y-4">
           {/* Template picker */}
           <Panel title="Template">
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {TEMPLATES.map(t => (
-                <button key={t.id} onClick={() => setTemplate(t.id)} className={`rounded-xl p-2 border-2 text-xs transition-all ${template === t.id ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted"}`}>
-                  <div className={`aspect-[3/4] rounded-md ${previewSwatch(t.id)}`} />
-                  <div className="mt-1 font-medium">{t.name}</div>
-                </button>
+                <motion.button
+                  key={t.id}
+                  onClick={() => setTemplate(t.id)}
+                  whileHover={{ y: -3 }}
+                  className={`group relative rounded-xl p-1.5 border-2 text-xs transition-all ${template === t.id ? "border-primary bg-primary/5 shadow-elegant" : "border-transparent hover:border-border bg-muted/30"}`}
+                >
+                  <div className="relative aspect-[3/4] rounded-md overflow-hidden bg-white">
+                    <div className="absolute inset-0 origin-top-left" style={{ transform: "scale(0.16)", width: "210mm", height: "297mm" }}>
+                      <CVPreview data={{ ...SAMPLE_CV, accent: data.accent, fontFamily: data.fontFamily }} template={t.id} />
+                    </div>
+                    <div className="absolute top-1 right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-green-500/90 text-white shadow">ATS {t.ats}</div>
+                  </div>
+                  <div className="mt-1.5 font-semibold truncate">{t.name}</div>
+                  <div className="text-[9px] text-muted-foreground truncate">{t.tag}</div>
+                </motion.button>
               ))}
             </div>
+          </Panel>
+
+          <Panel title="🎨 Style — couleur & police">
+            <div>
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Couleur d'accent</div>
+              <div className="flex flex-wrap gap-2">
+                {ACCENT_COLORS.map(c => (
+                  <button key={c} onClick={() => setData(d => ({ ...d, accent: c }))} title={c}
+                    className={`h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 ${data.accent === c ? "border-foreground scale-110" : "border-white shadow"}`}
+                    style={{ background: c }} />
+                ))}
+                <label className="h-7 w-7 rounded-full border-2 border-dashed border-border grid place-items-center cursor-pointer overflow-hidden">
+                  <input type="color" value={data.accent ?? "#4f46e5"} onChange={e => setData(d => ({ ...d, accent: e.target.value }))} className="h-10 w-10 cursor-pointer" />
+                </label>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Police</div>
+              <select value={data.fontFamily ?? "Inter"} onChange={e => setData(d => ({ ...d, fontFamily: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm">
+                {FONT_FAMILIES.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
+              </select>
+            </div>
+          </Panel>
+
+          <Panel title="📤 Importer un ancien CV">
+            <p className="text-xs text-muted-foreground">Uploadez votre PDF, Word ou une image. L'IA le convertit automatiquement au format ATS et pré-remplit les champs.</p>
+            <label className={`w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 py-4 text-sm font-medium cursor-pointer hover:bg-primary/10 transition-colors ${aiBusy === "import" ? "opacity-50 pointer-events-none" : ""}`}>
+              {aiBusy === "import" ? <><Loader2 className="h-4 w-4 animate-spin" /> Analyse IA en cours…</> : <><Upload className="h-4 w-4" /> Choisir un fichier (PDF, image, Word)</>}
+              <input type="file" accept=".pdf,.doc,.docx,image/*" className="hidden" onChange={e => e.target.files?.[0] && handleImportCV(e.target.files[0])} />
+            </label>
           </Panel>
 
           <Panel title="Infos personnelles">
@@ -219,10 +304,18 @@ function Editor() {
             <button onClick={() => setData(d => ({ ...d, languages: [...d.languages, { name: "", level: "" }] }))} className="w-full text-sm rounded-lg border border-dashed border-border py-2 hover:bg-muted"><Plus className="h-3.5 w-3.5 inline" /> Ajouter une langue</button>
           </Panel>
 
-          <Panel title="🎯 Adapter à une offre (bientôt IA)">
-            <p className="text-xs text-muted-foreground">Collez la fiche de poste pour que l'IA reformule votre CV. Fonctionnalité IA — disponible dès l'ajout des tarifs Pro+.</p>
-            <textarea rows={3} className="w-full rounded-xl border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="Collez la fiche de poste…" />
-            <button className="w-full rounded-xl bg-muted text-muted-foreground py-2.5 text-sm font-medium cursor-not-allowed inline-flex items-center justify-center gap-2"><Sparkles className="h-4 w-4" /> Optimiser avec l'IA (Pro)</button>
+          <Panel title="🎯 Adapter à une offre">
+            <p className="text-xs text-muted-foreground">Collez la fiche de poste OU uploadez une capture d'écran / un document. L'IA réécrit votre CV pour maximiser votre score ATS.</p>
+            <textarea rows={4} value={jobText} onChange={e => setJobText(e.target.value)} className="w-full rounded-xl border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="Collez ici l'annonce, la fiche de poste…" />
+            <div className="grid grid-cols-2 gap-2">
+              <label className={`inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2.5 text-xs font-medium cursor-pointer hover:bg-muted ${aiBusy === "adapt" ? "opacity-50 pointer-events-none" : ""}`}>
+                <Upload className="h-3.5 w-3.5" /> Joindre offre (PDF/image)
+                <input type="file" accept=".pdf,image/*,.doc,.docx" className="hidden" onChange={e => e.target.files?.[0] && handleAdapt(e.target.files[0])} />
+              </label>
+              <button onClick={() => handleAdapt()} disabled={aiBusy === "adapt"} className="rounded-xl gradient-primary text-white text-sm font-semibold py-2.5 inline-flex items-center justify-center gap-2 shadow-elegant hover:scale-[1.02] transition-transform disabled:opacity-50">
+                {aiBusy === "adapt" ? <><Loader2 className="h-4 w-4 animate-spin" /> IA…</> : <><Sparkles className="h-4 w-4" /> Optimiser</>}
+              </button>
+            </div>
           </Panel>
         </div>
 
@@ -235,16 +328,6 @@ function Editor() {
       </div>
     </div>
   );
-}
-
-function previewSwatch(id: string) {
-  switch (id) {
-    case "executive": return "bg-gradient-to-br from-indigo-100 to-indigo-300";
-    case "minimal": return "bg-gradient-to-br from-slate-100 to-slate-300";
-    case "gold": return "bg-gradient-to-br from-slate-800 to-black";
-    case "creative": return "bg-gradient-to-br from-purple-400 to-indigo-600";
-    default: return "bg-muted";
-  }
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
