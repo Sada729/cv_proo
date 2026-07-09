@@ -2,6 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+type CVOut = {
+  fullName: string; title: string; email: string; phone: string; location: string; summary: string;
+  experiences: { id: string; role: string; company: string; location?: string; start: string; end: string; description: string }[];
+  educations: { id: string; school: string; degree: string; start: string; end: string; description?: string }[];
+  skills: string[];
+  languages: { name: string; level: string }[];
+  accent?: string;
+  fontFamily?: string;
+  avatarUrl?: string;
+};
+
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
 
@@ -47,7 +58,7 @@ export const parseUploadedCV = createServerFn({ method: "POST" })
     mimeType: z.string(),
     fileName: z.string(),
   }).parse(raw))
-  .handler(async ({ data }): Promise<{ ok: boolean; cv?: unknown; error?: string }> => {
+  .handler(async ({ data }): Promise<{ ok: boolean; cv?: CVOut; error?: string }> => {
     try {
       const isImage = data.mimeType.startsWith("image/");
       const content = isImage
@@ -65,7 +76,7 @@ export const parseUploadedCV = createServerFn({ method: "POST" })
         { role: "user", content },
       ]);
       const parsed = JSON.parse(stripJson(out));
-      const cv = {
+      const cv: CVOut = {
         fullName: parsed.fullName ?? "",
         title: parsed.title ?? "",
         email: parsed.email ?? "",
@@ -86,13 +97,13 @@ export const parseUploadedCV = createServerFn({ method: "POST" })
 export const adaptCVToJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw) => z.object({
-    currentCV: z.any(),
+    currentCV: z.record(z.string(), z.any()),
     jobText: z.string().optional(),
     fileBase64: z.string().optional(),
     mimeType: z.string().optional(),
     fileName: z.string().optional(),
   }).parse(raw))
-  .handler(async ({ data }): Promise<{ ok: boolean; cv?: unknown; error?: string }> => {
+  .handler(async ({ data }): Promise<{ ok: boolean; cv?: CVOut; error?: string }> => {
     try {
       const parts: unknown[] = [
         {
@@ -118,18 +129,19 @@ export const adaptCVToJob = createServerFn({ method: "POST" })
         { role: "user", content: parts },
       ]);
       const parsed = JSON.parse(stripJson(out));
-      const cv = {
+      const current = data.currentCV as Partial<CVOut>;
+      const cv: CVOut = {
         ...data.currentCV,
-        fullName: parsed.fullName ?? data.currentCV.fullName,
-        title: parsed.title ?? data.currentCV.title,
-        email: parsed.email ?? data.currentCV.email,
-        phone: parsed.phone ?? data.currentCV.phone,
-        location: parsed.location ?? data.currentCV.location,
-        summary: parsed.summary ?? data.currentCV.summary,
-        experiences: withIds(parsed.experiences ?? data.currentCV.experiences),
-        educations: withIds(parsed.educations ?? data.currentCV.educations),
-        skills: Array.isArray(parsed.skills) ? parsed.skills : (data.currentCV.skills ?? []),
-        languages: Array.isArray(parsed.languages) ? parsed.languages : (data.currentCV.languages ?? []),
+        fullName: parsed.fullName ?? current.fullName ?? "",
+        title: parsed.title ?? current.title ?? "",
+        email: parsed.email ?? current.email ?? "",
+        phone: parsed.phone ?? current.phone ?? "",
+        location: parsed.location ?? current.location ?? "",
+        summary: parsed.summary ?? current.summary ?? "",
+        experiences: withIds(parsed.experiences ?? current.experiences ?? []),
+        educations: withIds(parsed.educations ?? current.educations ?? []),
+        skills: Array.isArray(parsed.skills) ? parsed.skills : (current.skills ?? []),
+        languages: Array.isArray(parsed.languages) ? parsed.languages : (current.languages ?? []),
       };
       return { ok: true, cv };
     } catch (e) {
