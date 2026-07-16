@@ -2,6 +2,29 @@
 
 Application de création de CV en ligne, avec authentification (email/mot de passe + Google OAuth) et interface d'administration.
 
+## Présentation du projet
+
+CV Pro est une application web permettant à un utilisateur de créer, personnaliser et gérer son CV en ligne. Le projet est découpé en deux parties indépendantes qui communiquent via une API REST :
+
+- **Le frontend public** (React) : c'est l'application que les visiteurs utilisent pour créer un compte, se connecter (email/mot de passe ou Google), et construire leur CV.
+- **L'interface d'administration** (React, SPA séparée) : réservée aux comptes ayant le rôle `admin`, elle permet de piloter l'ensemble de la plateforme — gestion des utilisateurs, supervision des CV créés, statistiques via un dashboard, etc.
+- **Le backend** (Laravel) : expose une API REST unique consommée à la fois par le frontend public et par l'interface admin. Il gère l'authentification (Sanctum + Google OAuth), les autorisations par rôle, et l'accès à la base de données.
+- **La base de données** (MySQL) : stocke les utilisateurs, leurs rôles, et à terme les CV créés (contenu, modèles, exports).
+
+L'objectif est d'avoir une architecture claire et découplée : n'importe quel client (le site public, l'admin, une future app mobile) peut consommer la même API Laravel sans dépendre de l'implémentation du frontend.
+
+### Comment les briques s'articulent
+
+```
+Utilisateur ──► Frontend React (localhost:5173) ──► API Laravel (127.0.0.1:8000) ──► MySQL (cvpro)
+                                                            │
+Admin ──► Interface admin React ────────────────────────────┘
+                                                            │
+                                                    Google OAuth (Socialite)
+```
+
+Toute la logique métier et les données vivent côté Laravel ; les deux fronts React ne sont que des interfaces qui consomment cette API via des appels HTTP authentifiés par token (Sanctum).
+
 ## Stack technique
 
 | Couche | Technologie |
