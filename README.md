@@ -39,25 +39,30 @@ Toute la logique métier et les données vivent côté Laravel ; les deux fronts
 ## Structure du projet
 
 ```
-cvpro/
-├── backend/          → API Laravel
+cvpro/  (racine du dépôt)
+├── backend/          → API Laravel 13 (SQLite en dev · MySQL en cible)
 │   ├── app/
-│   │   ├── Http/Controllers/Auth/   (AuthController, GoogleAuthController)
-│   │   └── Models/User.php
-│   ├── config/
-│   │   ├── cors.php
-│   │   └── services.php             (identifiants Google)
-│   ├── database/migrations/
+│   │   ├── Http/
+│   │   │   ├── Controllers/
+│   │   │   │   ├── Auth/            (AuthController, GoogleAuthController)
+│   │   │   │   ├── Admin/           (AdminController, UserController)
+│   │   │   │   ├── CvController.php
+│   │   │   │   └── ProfileController.php
+│   │   │   └── Middleware/EnsureRole.php    (middleware role:admin)
+│   │   └── Models/                  (User, Cv)
+│   ├── config/                      (cors.php, services.php → Google)
+│   ├── database/migrations/ · seeders/   (admin + user de test)
 │   └── routes/
-│       ├── api.php                  (routes REST : login, register, admin/*)
+│       ├── api.php                  (login, register, cvs, admin/*)
 │       └── web.php                  (redirections Google OAuth)
-└── frontend/         → App React Vite
+└── frontend/         → SPA React 19 + Vite (TypeScript)
     ├── src/
-    │   ├── api/axios.js             (client HTTP configuré)
-    │   ├── context/AuthContext.jsx
-    │   ├── pages/                   (app publique)
-    │   └── admin/                   (interface admin)
-    └── vite.config.js
+    │   ├── api/axios.ts             (client HTTP + token Bearer)
+    │   ├── context/AuthContext.tsx
+    │   ├── components/              (ui/ shadcn, AppShell, ProtectedRoute…)
+    │   ├── pages/                   (Landing, Auth, Dashboard, Editor…)
+    │   └── admin/                   (AdminLayout, AdminDashboard, AdminUsers)
+    └── vite.config.ts
 ```
 
 ## Prérequis
@@ -70,7 +75,13 @@ cvpro/
 
 ### 1. Base de données
 
-Créer une base MySQL nommée `cvpro` (encodage `utf8mb4`, collation `utf8mb4_unicode_ci`), par exemple via phpMyAdmin.
+**Développement rapide (SQLite, par défaut)** — aucune installation : le `.env.example`
+est déjà configuré sur `DB_CONNECTION=sqlite`. Le fichier `database/database.sqlite`
+est créé automatiquement au premier `php artisan migrate`.
+
+**Cible (MySQL / XAMPP)** — créer une base `cvpro` (encodage `utf8mb4`, collation
+`utf8mb4_unicode_ci`) via phpMyAdmin, puis basculer `DB_CONNECTION=mysql` dans `.env`
+(voir le bloc mysql commenté).
 
 ### 2. Backend (Laravel)
 
@@ -100,21 +111,23 @@ GOOGLE_CLIENT_SECRET=xxxxx
 GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 ```
 
-Lancer les migrations :
+Lancer les migrations **et le seed** (crée un admin + un utilisateur de test) :
 
 ```bash
-php artisan migrate
+php artisan migrate --seed
 ```
 
-Créer un compte admin de test (via `php artisan tinker`) :
+Comptes de test créés par le seeder :
 
-```php
-User::create([
-    'name' => 'Admin',
-    'email' => 'admin@cvpro.test',
-    'password' => bcrypt('password123'),
-    'role' => 'admin',
-]);
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| admin | `admin@cvpro.test` | `password123` |
+| user | `user@cvpro.test` | `password123` |
+
+Créer le lien de stockage public (upload d'avatars) :
+
+```bash
+php artisan storage:link
 ```
 
 Démarrer le serveur :
@@ -171,16 +184,28 @@ Chaque utilisateur possède un champ `role` (`user` par défaut, `admin` pour le
 | GET | `/auth/google/callback` | Callback Google | Non |
 | POST | `/api/logout` | Déconnexion | Oui |
 | GET | `/api/user` | Utilisateur courant | Oui |
-| GET | `/api/admin/dashboard` | Dashboard admin | Oui (role admin) |
+| PUT | `/api/profile` | Mettre à jour le profil | Oui |
+| POST | `/api/profile/avatar` | Upload photo de profil | Oui |
+| GET·POST | `/api/cvs` | Lister / créer ses CV | Oui |
+| GET·PUT·DELETE | `/api/cvs/{id}` | Lire / modifier / supprimer un CV | Oui |
+| GET | `/api/admin/dashboard` | Statistiques admin | Oui (role admin) |
+| GET·POST | `/api/admin/users` | Lister / créer des utilisateurs | Oui (role admin) |
+| GET·PUT·DELETE | `/api/admin/users/{id}` | Gérer un utilisateur | Oui (role admin) |
 
-## À venir / TODO
+## État d'avancement
 
-- [ ] Formulaires React d'inscription et de connexion
-- [ ] Page de callback Google côté frontend (`/auth/callback`)
-- [ ] CRUD utilisateurs dans l'interface admin
-- [ ] Gestion des CV (modèles, création, export PDF)
-- [ ] Upload de fichiers (photos de profil, logos)
-- [ ] Régénération des clés Supabase de l'ancien prototype (compromises suite à un `.env` exposé publiquement)
+- [x] Formulaires React d'inscription et de connexion
+- [x] Page de callback Google côté frontend (`/auth/callback`)
+- [x] CRUD utilisateurs dans l'interface admin (liste, création, rôle, suppression)
+- [x] Gestion des CV (9 modèles ATS, éditeur temps réel, export PDF via `react-to-print`)
+- [x] Upload de photo de profil (recadrage 400×400 côté client)
+- [x] Ancien prototype Lovable/Supabase retiré du dépôt (clés Supabase à révoquer côté Supabase)
+
+### Pistes futures
+
+- [ ] Paiement en ligne (Wave / Orange Money / carte) pour débloquer les téléchargements
+- [ ] Assistant IA (import d'un ancien CV, adaptation à une offre d'emploi)
+- [ ] Envoi d'email de vérification / réinitialisation de mot de passe
 
 ## Environnement de développement (Windows)
 
