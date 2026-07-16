@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Cv;
 use App\Models\User;
 
@@ -16,7 +17,7 @@ class AdminController extends Controller
         return response()->json([
             'stats' => [
                 'users' => User::count(),
-                'admins' => User::where('role', 'admin')->count(),
+                'admins' => Admin::count(),
                 'cvs' => Cv::count(),
                 'new_users_7d' => User::where('created_at', '>=', now()->subDays(7))->count(),
             ],

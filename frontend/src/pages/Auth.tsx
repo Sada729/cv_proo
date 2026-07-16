@@ -54,20 +54,20 @@ export default function Auth() {
         <div className="absolute -bottom-24 -left-10 h-80 w-80 rounded-full bg-white/10 blur-3xl animate-blob" style={{ animationDelay: "3s" }} />
         <Link to="/" className="relative flex items-center gap-2 font-bold text-xl">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/20 backdrop-blur"><Sparkles className="h-5 w-5" /></span>
-          ResumAI
+          CV PRO
         </Link>
         <div className="relative">
           <h1 className="text-4xl font-bold leading-tight">Votre CV, réinventé par l'<span className="italic font-serif">IA</span>.</h1>
-          <p className="mt-4 text-white/85 max-w-md">Rejoignez des milliers de candidats qui décrochent leurs entretiens grâce à ResumAI.</p>
+          <p className="mt-4 text-white/85 max-w-md">Rejoignez des milliers de candidats qui décrochent leurs entretiens grâce à CV PRO.</p>
         </div>
-        <div className="relative text-sm text-white/70">© 2026 ResumAI</div>
+        <div className="relative text-sm text-white/70">© 2026 CV PRO</div>
       </div>
 
       <div className="flex items-center justify-center p-6 md:p-12">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <div className="lg:hidden mb-8 flex items-center gap-2 font-bold text-xl">
             <span className="grid h-9 w-9 place-items-center rounded-xl gradient-primary text-white"><Sparkles className="h-5 w-5" /></span>
-            ResumAI
+            CV PRO
           </div>
           <h2 className="text-3xl font-bold">{mode === "login" ? "Bon retour !" : "Créer un compte"}</h2>
           <p className="mt-2 text-muted-foreground text-sm">

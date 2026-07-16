@@ -5,7 +5,7 @@ import api from "@/api/axios";
 
 type DashboardData = {
   stats: { users: number; admins: number; cvs: number; new_users_7d: number };
-  recent_users: { id: number; name: string; email: string; role: string; created_at: string }[];
+  recent_users: { id: number; name: string; email: string; created_at: string }[];
 };
 
 const CARDS = [
@@ -15,7 +15,7 @@ const CARDS = [
   { key: "new_users_7d", label: "Nouveaux (7j)", icon: TrendingUp, color: "text-amber-600 bg-amber-500/10" },
 ] as const;
 
-export default function AdminDashboard() {
+export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,23 +61,14 @@ export default function AdminDashboard() {
                   <div className="text-xs text-muted-foreground">{u.email}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <RoleBadge role={u.role} />
-                <span className="text-xs text-muted-foreground hidden sm:block">{new Date(u.created_at).toLocaleDateString("fr-FR")}</span>
-              </div>
+              <span className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("fr-FR")}</span>
             </div>
           ))}
+          {data.recent_users.length === 0 && (
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">Aucun utilisateur pour le moment.</div>
+          )}
         </div>
       </div>
     </div>
-  );
-}
-
-function RoleBadge({ role }: { role: string }) {
-  const admin = role === "admin";
-  return (
-    <span className={`text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${admin ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
-      {role}
-    </span>
   );
 }

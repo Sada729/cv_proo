@@ -5,14 +5,12 @@ export type User = {
   id: number;
   name: string;
   email: string;
-  role: "user" | "admin";
   avatar_url: string | null;
 };
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
-  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -79,17 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isAdmin: user?.role === "admin",
-        login,
-        register,
-        logout,
-        applyToken,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, register, logout, applyToken }}>
       {children}
     </AuthContext.Provider>
   );

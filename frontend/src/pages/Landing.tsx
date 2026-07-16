@@ -33,7 +33,7 @@ function Header() {
           <span className="grid h-8 w-8 place-items-center rounded-xl gradient-primary text-white">
             <Sparkles className="h-4 w-4" />
           </span>
-          <span>ResumAI</span>
+          <span>CV PRO</span>
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
           {["Fonctionnalités", "Templates", "Tarifs", "FAQ"].map((l) => (
@@ -394,7 +394,7 @@ function CTA() {
         <div className="relative">
           <Wand2 className="h-10 w-10 text-white mx-auto" />
           <h2 className="mt-4 text-4xl md:text-6xl font-bold text-white">Prêt à décrocher le job ?</h2>
-          <p className="mt-4 text-white/85 max-w-xl mx-auto">Rejoignez des milliers de candidats qui ont transformé leur CV avec ResumAI.</p>
+          <p className="mt-4 text-white/85 max-w-xl mx-auto">Rejoignez des milliers de candidats qui ont transformé leur CV avec CV PRO.</p>
           <Link to="/auth" className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white text-primary font-semibold px-8 py-4 shadow-lg hover:scale-[1.03] transition-transform">
             Créer mon CV maintenant <ArrowRight className="h-4 w-4" />
           </Link>
@@ -406,7 +406,7 @@ function CTA() {
 
 function Testimonials() {
   const items = [
-    { q: "J'ai décroché mon poste chez Orange en 2 semaines grâce à ResumAI.", a: "Awa D.", role: "Product Manager, Dakar" },
+    { q: "J'ai décroché mon poste chez Orange en 2 semaines grâce à CV PRO.", a: "Awa D.", role: "Product Manager, Dakar" },
     { q: "L'adaptation IA m'a fait passer de 0 à 8 entretiens en un mois.", a: "Cheikh M.", role: "Dev Full-Stack" },
     { q: "Templates magnifiques, export impeccable. Le rapport qualité/prix est imbattable.", a: "Marie K.", role: "Cheffe de projet" },
     { q: "Enfin un outil qui comprend nos réalités africaines et paie en FCFA.", a: "Ibrahim S.", role: "Data Analyst" },
@@ -469,7 +469,7 @@ function Footer() {
             <span className="grid h-9 w-9 place-items-center rounded-xl gradient-primary text-white">
               <Sparkles className="h-5 w-5" />
             </span>
-            ResumAI
+            CV PRO
           </div>
           <p className="mt-4 text-sm text-muted-foreground max-w-sm">Le créateur de CV intelligent, propulsé par l'IA. Modernes, ATS-ready, sur mesure.</p>
         </div>
@@ -491,7 +491,7 @@ function Footer() {
         </div>
       </div>
       <div className="mx-auto max-w-[1200px] mt-10 pt-6 border-t border-border/60 text-xs text-muted-foreground">
-        © 2026 ResumAI. Tous droits réservés.
+        © 2026 CV PRO. Tous droits réservés.
       </div>
     </footer>
   );

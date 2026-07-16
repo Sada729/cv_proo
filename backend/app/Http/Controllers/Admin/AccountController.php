@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Admin management of end users (users table).
+ * Lets admins manage the pool of administrators (admins table).
  */
-class UserController extends Controller
+class AccountController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::query()->withCount('cvs')->latest();
+        $query = Admin::query()->latest();
 
         if ($search = $request->query('search')) {
             $query->where(function ($w) use ($search) {
@@ -27,29 +27,24 @@ class UserController extends Controller
         return $query->paginate(15);
     }
 
-    public function show(User $user)
-    {
-        return $user->loadCount('cvs');
-    }
-
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => ['required', 'email', 'unique:admins,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
         $data['password'] = Hash::make($data['password']);
 
-        return response()->json(User::create($data), 201);
+        return response()->json(Admin::create($data), 201);
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, Admin $admin)
     {
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'email', 'unique:users,email,'.$user->id],
+            'email' => ['sometimes', 'email', 'unique:admins,email,'.$admin->id],
             'password' => ['sometimes', 'nullable', 'confirmed', Password::min(8)],
         ]);
 
@@ -59,15 +54,23 @@ class UserController extends Controller
             unset($data['password']);
         }
 
-        $user->update($data);
+        $admin->update($data);
 
-        return $user;
+        return $admin;
     }
 
-    public function destroy(User $user)
+    public function destroy(Request $request, Admin $admin)
     {
-        $user->delete();
+        if ($admin->id === $request->user()->id) {
+            return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 422);
+        }
 
-        return response()->json(['message' => 'Utilisateur supprimé.']);
+        if (Admin::count() <= 1) {
+            return response()->json(['message' => 'Impossible de supprimer le dernier administrateur.'], 422);
+        }
+
+        $admin->delete();
+
+        return response()->json(['message' => 'Administrateur supprimé.']);
     }
 }

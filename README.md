@@ -29,40 +29,50 @@ Toute la logique métier et les données vivent côté Laravel ; les deux fronts
 
 | Couche | Technologie |
 |---|---|
-| Frontend | React + Vite (TypeScript), React Router, Axios |
-| Backend | Laravel (API REST) |
-| Auth API | Laravel Sanctum (tokens) |
-| Auth sociale | Laravel Socialite (Google OAuth) |
-| Base de données | MySQL |
-| Interface admin | React (SPA séparée, consomme la même API) |
+| Site utilisateur | React 19 + Vite (TypeScript), React Router, Axios — port **5173** |
+| Site admin | React 19 + Vite (TypeScript) — **application séparée**, port **5174** |
+| Backend | Laravel 13 (API REST) — port **8000** |
+| Auth API | Laravel Sanctum (tokens) — **deux systèmes indépendants** |
+| Auth sociale | Laravel Socialite (Google OAuth, côté utilisateur) |
+| Base de données | MySQL (cible) / SQLite (dev) — **tables `users` et `admins` séparées** |
+
+> **Séparation user / admin** : les utilisateurs et les administrateurs vivent dans
+> **deux tables distinctes** (`users` / `admins`), avec **deux authentifications
+> indépendantes** et **deux sites** distincts. Un token utilisateur est refusé sur
+> l'API admin et inversement (middlewares `user` / `admin`).
 
 ## Structure du projet
 
 ```
 cvpro/  (racine du dépôt)
-├── backend/          → API Laravel 13 (SQLite en dev · MySQL en cible)
+├── backend/          → API Laravel 13 (SQLite en dev · MySQL en cible)   :8000
 │   ├── app/
 │   │   ├── Http/
 │   │   │   ├── Controllers/
-│   │   │   │   ├── Auth/            (AuthController, GoogleAuthController)
-│   │   │   │   ├── Admin/           (AdminController, UserController)
+│   │   │   │   ├── Auth/            (AuthController, GoogleAuthController — users)
+│   │   │   │   ├── Admin/           (AuthController, AdminController,
+│   │   │   │   │                     UserController, AccountController)
 │   │   │   │   ├── CvController.php
 │   │   │   │   └── ProfileController.php
-│   │   │   └── Middleware/EnsureRole.php    (middleware role:admin)
-│   │   └── Models/                  (User, Cv)
-│   ├── config/                      (cors.php, services.php → Google)
-│   ├── database/migrations/ · seeders/   (admin + user de test)
+│   │   │   └── Middleware/          (EnsureAdmin, EnsureUser)
+│   │   └── Models/                  (User, Admin, Cv)
+│   ├── config/                      (cors.php, auth.php, services.php → Google)
+│   ├── database/migrations/ · seeders/   (users, admins, cvs)
 │   └── routes/
-│       ├── api.php                  (login, register, cvs, admin/*)
+│       ├── api.php                  (user: login/register/cvs · admin: admin/login, admin/*)
 │       └── web.php                  (redirections Google OAuth)
-└── frontend/         → SPA React 19 + Vite (TypeScript)
-    ├── src/
-    │   ├── api/axios.ts             (client HTTP + token Bearer)
-    │   ├── context/AuthContext.tsx
-    │   ├── components/              (ui/ shadcn, AppShell, ProtectedRoute…)
-    │   ├── pages/                   (Landing, Auth, Dashboard, Editor…)
-    │   └── admin/                   (AdminLayout, AdminDashboard, AdminUsers)
-    └── vite.config.ts
+├── frontend/         → SITE UTILISATEUR — React 19 + Vite (TS)            :5173
+│   └── src/
+│       ├── api/axios.ts             (token users : cvpro_token)
+│       ├── context/AuthContext.tsx
+│       ├── components/              (ui/ shadcn, AppShell, ProtectedRoute…)
+│       └── pages/                   (Landing, Auth, Dashboard, Editor…)
+└── admin/            → SITE ADMIN (séparé) — React 19 + Vite (TS)         :5174
+    └── src/
+        ├── api/axios.ts             (token admins : cvpro_admin_token)
+        ├── context/AdminAuthContext.tsx
+        ├── components/              (AdminLayout, ProtectedRoute)
+        └── pages/                   (Login, Dashboard, Users, Admins)
 ```
 
 ## Prérequis
@@ -137,25 +147,46 @@ php artisan serve
 # API disponible sur http://127.0.0.1:8000
 ```
 
-### 3. Frontend (React Vite)
+### 3. Site utilisateur (React Vite)
 
 ```bash
 cd frontend
 npm install
 npm run dev
-# App disponible sur http://localhost:5173
+# Site utilisateur sur http://localhost:5173
 ```
+
+### 4. Site admin (React Vite, séparé)
+
+```bash
+cd admin
+npm install
+npm run dev
+# Site admin sur http://localhost:5174
+```
+
+> Les deux origines (`5173` et `5174`) doivent figurer dans le CORS backend
+> (`FRONTEND_URL` et `ADMIN_URL` dans `backend/.env`).
 
 ## Authentification
 
-### Email / mot de passe
+Deux systèmes **totalement indépendants** (tables et endpoints séparés).
+
+### Site utilisateur — email / mot de passe (table `users`)
 
 - `POST /api/register` — création de compte (`name`, `email`, `password`, `password_confirmation`)
-- `POST /api/login` — connexion (`email`, `password`) → retourne un `token` Sanctum
-- `POST /api/logout` — déconnexion (nécessite le token)
-- `GET /api/user` — utilisateur courant (nécessite le token)
+- `POST /api/login` — connexion → retourne un `token` Sanctum (stocké sous `cvpro_token`)
+- `POST /api/logout` · `GET /api/user`
 
-Le token est à stocker côté frontend (ex: `localStorage`) et envoyé dans le header `Authorization: Bearer {token}` sur chaque requête protégée.
+### Site admin — email / mot de passe (table `admins`)
+
+- `POST /api/admin/login` — connexion admin → `token` Sanctum (stocké sous `cvpro_admin_token`)
+- `POST /api/admin/logout` · `GET /api/admin/me`
+
+Le token est envoyé dans le header `Authorization: Bearer {token}`. Un token utilisateur
+est **rejeté (403)** sur les routes admin et inversement.
+
+Comptes de test (seed) : `admin@cvpro.test` (site admin) et `user@cvpro.test` (site user), mot de passe `password123`.
 
 ### Google OAuth
 
@@ -170,33 +201,37 @@ Le token est à stocker côté frontend (ex: `localStorage`) et envoyé dans le 
 4. Ajouter `http://127.0.0.1:8000/auth/google/callback` comme URI de redirection autorisée
 5. Renseigner `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `backend/.env`
 
-## Rôles et permissions
+## Séparation user / admin
 
-Chaque utilisateur possède un champ `role` (`user` par défaut, `admin` pour les administrateurs). Les routes sous `/api/admin/*` sont protégées par le middleware `role:admin`.
+Il n'y a **pas** de champ `role` : utilisateurs et administrateurs sont dans **deux
+tables séparées** (`users` / `admins`), chacune avec son endpoint de connexion et ses
+tokens. Côté API, deux middlewares garantissent l'étanchéité :
+
+- `user` — n'accepte que les tokens issus de la table `users` (routes du site utilisateur) ;
+- `admin` — n'accepte que les tokens issus de la table `admins` (routes `/api/admin/*`).
 
 ## Routes API principales
 
-| Méthode | Route | Description | Auth requise |
+| Méthode | Route | Description | Auth |
 |---|---|---|---|
-| POST | `/api/register` | Inscription | Non |
-| POST | `/api/login` | Connexion | Non |
-| GET | `/auth/google/redirect` | Démarre le flow Google | Non |
-| GET | `/auth/google/callback` | Callback Google | Non |
-| POST | `/api/logout` | Déconnexion | Oui |
-| GET | `/api/user` | Utilisateur courant | Oui |
-| PUT | `/api/profile` | Mettre à jour le profil | Oui |
-| POST | `/api/profile/avatar` | Upload photo de profil | Oui |
-| GET·POST | `/api/cvs` | Lister / créer ses CV | Oui |
-| GET·PUT·DELETE | `/api/cvs/{id}` | Lire / modifier / supprimer un CV | Oui |
-| GET | `/api/admin/dashboard` | Statistiques admin | Oui (role admin) |
-| GET·POST | `/api/admin/users` | Lister / créer des utilisateurs | Oui (role admin) |
-| GET·PUT·DELETE | `/api/admin/users/{id}` | Gérer un utilisateur | Oui (role admin) |
+| POST | `/api/register` | Inscription utilisateur | — |
+| POST | `/api/login` | Connexion utilisateur | — |
+| GET | `/auth/google/redirect` · `/auth/google/callback` | Google OAuth (user) | — |
+| POST | `/api/logout` · GET `/api/user` | Session utilisateur | user |
+| PUT | `/api/profile` · POST `/api/profile/avatar` | Profil / avatar | user |
+| GET·POST | `/api/cvs` · GET·PUT·DELETE `/api/cvs/{id}` | Gérer ses CV | user |
+| POST | `/api/admin/login` | Connexion **admin** | — |
+| POST | `/api/admin/logout` · GET `/api/admin/me` | Session admin | admin |
+| GET | `/api/admin/dashboard` | Statistiques | admin |
+| GET·POST·PUT·DELETE | `/api/admin/users` · `/api/admin/users/{id}` | Gérer les utilisateurs | admin |
+| GET·POST·PUT·DELETE | `/api/admin/admins` · `/api/admin/admins/{id}` | Gérer les administrateurs | admin |
 
 ## État d'avancement
 
 - [x] Formulaires React d'inscription et de connexion
 - [x] Page de callback Google côté frontend (`/auth/callback`)
-- [x] CRUD utilisateurs dans l'interface admin (liste, création, rôle, suppression)
+- [x] Site admin **séparé** avec authentification indépendante (table `admins`)
+- [x] CRUD utilisateurs + CRUD administrateurs dans l'interface admin
 - [x] Gestion des CV (9 modèles ATS, éditeur temps réel, export PDF via `react-to-print`)
 - [x] Upload de photo de profil (recadrage 400×400 côté client)
 - [x] Ancien prototype Lovable/Supabase retiré du dépôt (clés Supabase à révoquer côté Supabase)

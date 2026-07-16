@@ -18,7 +18,6 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             // Nullable: Google OAuth users have no local password.
             $table->string('password')->nullable();
-            $table->string('role')->default('user');
             $table->string('avatar_url')->nullable();
             $table->string('google_id')->nullable()->unique();
             $table->rememberToken();

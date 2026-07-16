@@ -2,24 +2,24 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+/**
+ * Administrators live in their OWN table, fully separate from end users.
+ * They authenticate through a dedicated endpoint and their tokens are only
+ * accepted on admin routes (see EnsureAdmin middleware).
+ */
+class Admin extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'avatar_url',
-        'google_id',
     ];
 
     protected $hidden = [
@@ -27,19 +27,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    public function cvs(): HasMany
-    {
-        return $this->hasMany(Cv::class);
     }
 }
